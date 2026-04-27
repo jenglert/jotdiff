@@ -73,12 +73,17 @@ async function createMainWindow(): Promise<void> {
     minHeight: 760,
     backgroundColor: "#10161d",
     title: "Jotdiff",
+    autoHideMenuBar: process.platform !== "darwin",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
+
+  if (process.platform !== "darwin") {
+    mainWindow.setMenuBarVisibility(false);
+  }
 
   if (isDev && process.env.VITE_DEV_SERVER_URL) {
     await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
