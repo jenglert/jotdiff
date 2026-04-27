@@ -1,16 +1,39 @@
 # Jotdiff
 
-Jotdiff is a desktop Git diff viewer built with Electron and React.
+Jotdiff is a desktop Git diff viewer for people who spend a lot of time reviewing working tree changes and are tired of flipping between terminal output, editor tabs, and half-readable patch views.
 
-It is aimed at the everyday "what changed in this working tree?" workflow:
+It gives you a focused review surface for real day-to-day Git work:
 
 - staged changes
 - unstaged changes
 - untracked files
 - path-scoped launches
 - unified and split diff views
+- a real changed-files tree instead of a flat pile of filenames
 
-The app is launched from a thin CLI, but almost all repository loading, filtering, and diff rendering happens inside the desktop app.
+The goal is simple: make it faster to understand what changed, where it changed, and whether the change set still looks coherent before you commit.
+
+## Why Jotdiff Is Good
+
+Jotdiff is useful because it combines a few things that are usually scattered across tools:
+
+- a thin CLI launcher that opens directly into the repo and path you care about
+- a desktop UI that keeps working tree review visually calm and easy to scan
+- separate staged and unstaged sections when a file has both
+- a collapsible directory tree so you can stay oriented in larger change sets
+- incremental diff loading so the app does not fall apart the moment a repo gets messy
+
+In practice, that means less time reconstructing context in your head and more time actually reviewing the change.
+
+## Screenshots
+
+Unified view:
+
+![Jotdiff unified diff view](docs/screenshots/jotdiff-overview-unified.png)
+
+Split view:
+
+![Jotdiff split diff view](docs/screenshots/jotdiff-overview-split.png)
 
 ## Current Status
 
