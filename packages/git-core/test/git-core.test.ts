@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
 import { createTempRepo } from "../../../tests/helpers/temp-repo";
 import { detectRepo, listWorkingTreeChanges, loadFileDiff } from "../src/index";
@@ -121,6 +122,104 @@ test("loadFileDiff marks untracked binary files as binary", async () => {
     assert.equal(diff.isBinary, true);
     assert.match(diff.binaryReason ?? "", /binary|non-text/i);
     assert.equal(diff.sections[0]?.isBinary, true);
+  } finally {
+    await repo.cleanup();
+  }
+});
+
+test("detectRepo reports repo root and relative cwd for nested directories", async () => {
+  const repo = await createTempRepo();
+
+  try {
+    await repo.write("src/nested/file.txt", "alpha\n");
+
+    const detected = await detectRepo(`${repo.dir}/src/nested`);
+    assert.ok(detected);
+    assert.equal(path.normalize(detected.repoRoot), path.normalize(repo.dir));
+    assert.equal(detected.relativeCwd, "src/nested");
+    assert.equal(detected.repoName.length > 0, true);
+  } finally {
+    await repo.cleanup();
+  }
+});
+
+test("listWorkingTreeChanges respects filters and path scopes", async () => {
+  const repo = await createTempRepo();
+
+  try {
+    await repo.write("apps/one.txt", "base\n");
+    await repo.write("docs/two.txt", "base\n");
+    await repo.git(["add", "."]);
+    await repo.git(["commit", "-m", "init"]);
+
+    await repo.write("apps/one.txt", "base\nnext\n");
+    await repo.git(["add", "apps/one.txt"]);
+    await repo.write("apps/one.txt", "base\nnext\nfinal\n");
+    await repo.write("docs/two.txt", "base\nnext\n");
+    await repo.write("apps/new.txt", "new\n");
+
+    const detected = await detectRepo(repo.dir);
+    assert.ok(detected);
+
+    const stagedOnly = await listWorkingTreeChanges(
+      detected,
+      { staged: true, unstaged: false, untracked: false },
+      "apps",
+    );
+    assert.deepEqual(
+      stagedOnly.map((entry) => entry.path),
+      ["apps/one.txt"],
+    );
+
+    const unstagedAndUntracked = await listWorkingTreeChanges(
+      detected,
+      { staged: false, unstaged: true, untracked: true },
+      "apps",
+    );
+    assert.deepEqual(
+      unstagedAndUntracked.map((entry) => entry.path),
+      ["apps/new.txt", "apps/one.txt"],
+    );
+  } finally {
+    await repo.cleanup();
+  }
+});
+
+test("loadFileDiff separates staged and unstaged sections for a mixed file", async () => {
+  const repo = await createTempRepo();
+
+  try {
+    await repo.write("tracked.txt", "alpha\n");
+    await repo.git(["add", "tracked.txt"]);
+    await repo.git(["commit", "-m", "init"]);
+
+    await repo.write("tracked.txt", "alpha\nbeta\n");
+    await repo.git(["add", "tracked.txt"]);
+    await repo.write("tracked.txt", "alpha\nbeta\ngamma\n");
+
+    const detected = await detectRepo(repo.dir);
+    assert.ok(detected);
+
+    const [entry] = await listWorkingTreeChanges(detected, {
+      staged: true,
+      unstaged: true,
+      untracked: true,
+    });
+    assert.ok(entry);
+
+    const diff = await loadFileDiff(
+      detected,
+      entry,
+      "unified",
+      { staged: true, unstaged: true, untracked: true },
+      { full: true },
+    );
+
+    assert.equal(diff.sections.length, 2);
+    assert.equal(diff.sections[0]?.label, "Staged changes");
+    assert.equal(diff.sections[1]?.label, "Unstaged changes");
+    assert.ok((diff.sections[0]?.hunks.length ?? 0) > 0);
+    assert.ok((diff.sections[1]?.hunks.length ?? 0) > 0);
   } finally {
     await repo.cleanup();
   }
