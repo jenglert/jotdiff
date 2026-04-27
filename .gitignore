@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-electron/
+coverage/
+storybook-static/
+playwright-report/
+test-results/
+.vite/

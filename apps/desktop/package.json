@@ -1,0 +1,41 @@
+{
+  "name": "@jotdiff/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "node ./scripts/dev.mjs",
+    "dev:renderer": "vite",
+    "dev:bundle": "tsup --watch",
+    "dev:electron": "wait-on tcp:5174 dist-electron/main.js && electronmon dist-electron/main.js",
+    "build": "npm run build:renderer && npm run build:electron",
+    "build:renderer": "vite build",
+    "build:electron": "tsup",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@jotdiff/git-core": "0.1.0",
+    "@jotdiff/session-core": "0.1.0",
+    "@jotdiff/shared-types": "0.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@storybook/addon-mcp": "^0.6.0",
+    "@storybook/react-vite": "^10.3.5",
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "concurrently": "^9.2.1",
+    "electron": "^37.2.6",
+    "electronmon": "^2.0.3",
+    "storybook": "^10.3.5",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "wait-on": "^8.0.5"
+  }
+}
